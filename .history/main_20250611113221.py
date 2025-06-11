@@ -39,66 +39,56 @@
 
 
 
-from fastapi import FastAPI, Request
+
+from fastapi import FastAPI
 from pydantic import BaseModel
 import faiss
 import json
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from typing import List, Optional
-import base64
-from PIL import Image
-import io
-import pytesseract
+import gradio as gr
+import threading
 
-# === Configuration ===
-INDEX_PATH = "./faiss_index/index.faiss"
-METADATA_PATH = "./faiss_index/metadata.jsonl"
+# === Configurations ===
+INDEX_PATH = "/home/petpooja-1052/Downloads/project_of_Tds/tds_project1/faiss_index/index.faiss"
+METADATA_PATH = "/home/petpooja-1052/Downloads/project_of_Tds/tds_project1/faiss_index/metadata.jsonl"
 EMBED_MODEL = "all-MiniLM-L6-v2"
 TOP_K = 5
 
-# === Load at startup ===
+# === Load model, index, metadata ===
 print("🔁 Loading model, index, and metadata...")
 model = SentenceTransformer(EMBED_MODEL)
 index = faiss.read_index(INDEX_PATH)
 metadata = [json.loads(line) for line in open(METADATA_PATH, "r", encoding="utf-8")]
 
+# === FastAPI setup ===
 app = FastAPI()
 
-class QueryRequest(BaseModel):
+class QueryInput(BaseModel):
     question: str
-    image: Optional[str] = None  # base64 encoded image
 
-@app.post("/api/")
-def answer_question(data: QueryRequest):
-    question = data.question.strip()
+@app.post("/askQuestion")
+def ask_question(input_data: QueryInput):
+    return {"answer": get_answer(input_data.question)}
 
-    # === Decode image and extract text if image exists ===
-    if data.image:
-        try:
-            image_data = base64.b64decode(data.image)
-            image = Image.open(io.BytesIO(image_data))
-            extracted_text = pytesseract.image_to_string(image)
-            question += " " + extracted_text.strip()
-        except Exception as e:
-            return {"answer": "❌ Could not decode image.", "links": []}
-
-    # === Embed and search ===
-    embedding = model.encode([question], normalize_embeddings=True)
+# === Core logic reused for both FastAPI and Gradio ===
+def get_answer(query: str) -> str:
+    embedding = model.encode([query], normalize_embeddings=True)
     D, I = index.search(np.array(embedding, dtype="float32"), TOP_K)
 
     relevant_chunks = [metadata[i]["text"] for i in I[0]]
     context = "\n---\n".join(relevant_chunks)
 
-    dummy_links = []
-    for i in I[0]:
-        if "url" in metadata[i]:
-            dummy_links.append({
-                "url": metadata[i]["url"],
-                "text": metadata[i].get("title", "Related Discourse Thread")
-            })
+    answer = f"📚 **Context:**\n{context}\n\n🤖 **Answer:**\nBased on the above context, your question was: '{query}'."
+    return answer
 
-    # === Return response ===
-    answer = f"📚 **Context:**\n{context}\n\n🤖 **Answer:**\nBased on the above, your question was: '{data.question.strip()}'."
+# === Gradio Interface ===
+def gradio_interface(query):
+    return get_answer(query)
 
-    return {"answer": answer, "links": dummy_links}
+def launch_gradio():
+    iface = gr.Interface(fn=gradio_interface, inputs="text", outputs="text", title="TDS Q&A Assistant")
+    iface.launch(server_name="0.0.0.0", server_port=7860, share=False)
+
+# === Launch Gradio in background thread ===
+threading.Thread(target=launch_gradio).start()

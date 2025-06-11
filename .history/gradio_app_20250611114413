@@ -1,0 +1,21 @@
+import gradio as gr
+import requests
+
+def query_backend(question):
+    try:
+        response = requests.post(
+            "http://127.0.0.1:8000/askQuestion",
+            json={"question": question},
+            timeout=10
+        )
+        return response.json().get("answer", "No answer returned.")
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+gr.Interface(
+    fn=query_backend,
+    inputs=gr.Textbox(lines=2, placeholder="Enter your question here..."),
+    outputs="text",
+    title="RAG Question Answering",
+    description="Ask questions from the FAISS index"
+).launch()

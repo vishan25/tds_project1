@@ -1,0 +1,19 @@
+import gradio as gr
+import requests
+
+API_URL = "http://127.0.0.1:8000/askQuestion"
+
+def ask_question_gradio(question):
+    response = requests.post(API_URL, json={"question": question})
+    if response.status_code == 200:
+        return response.json()["answer"]
+    else:
+        return f"❌ Error {response.status_code}: {response.text}"
+
+gr.Interface(
+    fn=ask_question_gradio,
+    inputs="text",
+    outputs="text",
+    title="TDS Q&A Assistant",
+    description="Ask any question related to the TDS course."
+).launch(server_name="0.0.0.0", server_port=7860)
