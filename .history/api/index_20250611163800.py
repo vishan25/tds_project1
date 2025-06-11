@@ -57,8 +57,5 @@ def answer_question(data: QueryRequest):
 
     return {"answer": answer, "links": dummy_links}
 
-@app.post("/api/")
-def ask(data: QueryRequest):
-    return answer_question(data)
 
 handler = Mangum(app)

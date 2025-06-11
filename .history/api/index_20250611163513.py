@@ -56,9 +56,4 @@ def answer_question(data: QueryRequest):
     answer = f"📚 **Context:**\n{context}\n\n🤖 **Answer:**\nBased on the above, your question was: '{data.question.strip()}'."
 
     return {"answer": answer, "links": dummy_links}
-
-@app.post("/api/")
-def ask(data: QueryRequest):
-    return answer_question(data)
-
 handler = Mangum(app)

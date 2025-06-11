@@ -12,7 +12,7 @@ import pytesseract
 from mangum import Mangum 
 import os
 
-INDEX_PATH = "./faiss_index/index.faiss"
+INDEX_PATH = "/home/petpooja-1052/Downloads/project_of_Tds/tds_project1/faiss_index/index.faiss"
 METADATA_PATH = "./faiss_index/metadata.jsonl"
 EMBED_MODEL = "all-MiniLM-L6-v2"
 TOP_K = 5
@@ -56,9 +56,4 @@ def answer_question(data: QueryRequest):
     answer = f"📚 **Context:**\n{context}\n\n🤖 **Answer:**\nBased on the above, your question was: '{data.question.strip()}'."
 
     return {"answer": answer, "links": dummy_links}
-
-@app.post("/api/")
-def ask(data: QueryRequest):
-    return answer_question(data)
-
 handler = Mangum(app)
