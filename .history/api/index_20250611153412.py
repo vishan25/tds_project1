@@ -55,4 +55,3 @@ def answer_question(data: QueryRequest):
     answer = f"📚 **Context:**\n{context}\n\n🤖 **Answer:**\nBased on the above, your question was: '{data.question.strip()}'."
 
     return {"answer": answer, "links": dummy_links}
-handler = Mangum(app)

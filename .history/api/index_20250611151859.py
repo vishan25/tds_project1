@@ -9,7 +9,6 @@ import base64
 from PIL import Image
 import io
 import pytesseract
-from mangum import Mangum 
 
 INDEX_PATH = "./faiss_index/index.faiss"
 METADATA_PATH = "./faiss_index/metadata.jsonl"
@@ -55,4 +54,3 @@ def answer_question(data: QueryRequest):
     answer = f"📚 **Context:**\n{context}\n\n🤖 **Answer:**\nBased on the above, your question was: '{data.question.strip()}'."
 
     return {"answer": answer, "links": dummy_links}
-handler = Mangum(app)
