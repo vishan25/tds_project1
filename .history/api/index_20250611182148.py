@@ -61,3 +61,4 @@ def answer_question(data: QueryRequest):
 def ask(data: QueryRequest):
     return answer_question(data)
 
+handler = Mangum(app)
